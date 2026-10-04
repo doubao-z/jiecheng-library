@@ -1,0 +1,28 @@
+name: Update virus library
+
+on:
+  schedule:
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Fetch recent samples
+        run: |
+          curl -X POST https://mb-api.abuse.ch/api/v1/ \
+            -H "Auth-Key: 9acb69c7e9b80477f0580737124e1d4f7c8def4207e54293" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "query=get_recent&selector=1000" \
+            -o library.json
+
+      - name: Commit and push
+        run: |
+          git config user.name "JieCheng Bot"
+          git config user.email "bot@jiecheng.local"
+          git add library.json
+          git commit -m "update $(date +'%Y-%m-%d')" || echo "no changes"
+          git push
